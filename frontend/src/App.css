@@ -60,6 +60,42 @@
   color: #3498db;
 }
 
+.alerts-config {
+  background-color: #f0f7f4;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #27ae60;
+}
+
+.alerts-config h3 {
+  margin-top: 0;
+  color: #27ae60;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+}
+
+.checkbox-group label {
+  display: flex;
+  flex-direction: column;
+}
+
+.help-text {
+  font-size: 12px;
+  color: #7f8c8d;
+  margin-top: 5px;
+}
+
 .input-group {
   margin-bottom: 15px;
 }
@@ -79,6 +115,13 @@
   font-size: 16px;
 }
 
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
 button {
   padding: 12px 20px;
   border: none;
@@ -86,7 +129,6 @@ button {
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
-  margin-right: 10px;
   margin-bottom: 10px;
   transition: background-color 0.3s;
 }
@@ -116,6 +158,15 @@ button {
 
 .check-now:hover {
   background-color: #2980b9;
+}
+
+.refresh-transactions {
+  background-color: #9b59b6;
+  color: white;
+}
+
+.refresh-transactions:hover {
+  background-color: #8e44ad;
 }
 
 .connect-telegram {
@@ -155,6 +206,18 @@ button:disabled {
   background-color: #d4edda;
   border-left: 4px solid #27ae60;
   color: #27ae60;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  .dashboard {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .price-display {
@@ -206,6 +269,122 @@ button:disabled {
 .discount-alert h3 {
   margin-top: 0;
   color: #e74c3c;
+}
+
+.transactions-display {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.transactions-display h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  color: #333;
+}
+
+.transaction-list {
+  margin-bottom: 20px;
+}
+
+.transaction-item {
+  display: grid;
+  grid-template-columns: 80px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  background-color: #f8f9fa;
+}
+
+.transaction-item.buy {
+  border-left: 4px solid #27ae60;
+}
+
+.transaction-item.sell {
+  border-left: 4px solid #e74c3c;
+}
+
+.transaction-item.mint {
+  border-left: 4px solid #f1c40f;
+}
+
+.transaction-item.burn {
+  border-left: 4px solid #9b59b6;
+}
+
+.transaction-item.transfer {
+  border-left: 4px solid #3498db;
+}
+
+.transaction-type {
+  font-weight: bold;
+}
+
+.transaction-item.buy .transaction-type {
+  color: #27ae60;
+}
+
+.transaction-item.sell .transaction-type {
+  color: #e74c3c;
+}
+
+.transaction-item.mint .transaction-type {
+  color: #f1c40f;
+}
+
+.transaction-item.burn .transaction-type {
+  color: #9b59b6;
+}
+
+.transaction-item.transfer .transaction-type {
+  color: #3498db;
+}
+
+.transaction-amount {
+  font-weight: bold;
+}
+
+.usd-value {
+  font-weight: normal;
+  color: #7f8c8d;
+  margin-left: 5px;
+  font-size: 12px;
+}
+
+.transaction-time {
+  color: #7f8c8d;
+  font-size: 12px;
+}
+
+.transaction-link {
+  text-decoration: none;
+  padding: 4px 8px;
+  background-color: #3498db;
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.transaction-link:hover {
+  background-color: #2980b9;
+}
+
+.transaction-help {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-top: 20px;
+  line-height: 1.6;
+}
+
+.transaction-help code {
+  background-color: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
 }
 
 .last-checked {

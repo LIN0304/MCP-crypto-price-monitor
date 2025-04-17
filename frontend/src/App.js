@@ -16,6 +16,9 @@ function App() {
   const [botStarted, setBotStarted] = useState(false);
   const [chatId, setChatId] = useState('');
   const [interval, setInterval] = useState(5); // minutes
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [transactionAlertsEnabled, setTransactionAlertsEnabled] = useState(false);
 
   // Function to fetch cryptocurrency prices
   const fetchPrices = async () => {
@@ -87,6 +90,21 @@ function App() {
     }
   };
   
+  // Function to fetch recent transactions
+  const fetchRecentTransactions = async () => {
+    setLoadingTransactions(true);
+    
+    try {
+      const response = await axios.get('/api/recent-transactions');
+      setRecentTransactions(response.data);
+    } catch (err) {
+      console.error('Error fetching transaction data:', err);
+      // We don't show error for transactions as it's a secondary feature
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+  
   // Function to send Telegram alert
   const sendTelegramAlert = async (carrotPrice, pufferPrice, discountPercentage) => {
     try {
@@ -102,6 +120,21 @@ function App() {
     } catch (err) {
       console.error('Error sending Telegram alert:', err);
       setError('Failed to send Telegram alert. Please check your Telegram bot connection.');
+    }
+  };
+  
+  // Toggle transaction alerts
+  const toggleTransactionAlerts = async () => {
+    setTransactionAlertsEnabled(!transactionAlertsEnabled);
+    
+    if (telegramConnected) {
+      try {
+        // This would normally call a backend endpoint to toggle the setting
+        // For demo purposes, we're just toggling the state
+        console.log('Transaction alerts toggled:', !transactionAlertsEnabled);
+      } catch (err) {
+        console.error('Error updating transaction alerts:', err);
+      }
     }
   };
   
@@ -154,6 +187,19 @@ function App() {
       if (timer) clearInterval(timer);
     };
   }, [monitorActive, interval]);
+  
+  // Fetch recent transactions periodically if connected
+  useEffect(() => {
+    if (!telegramConnected) return;
+    
+    fetchRecentTransactions();
+    
+    const transactionTimer = setInterval(fetchRecentTransactions, 30000); // Every 30 seconds
+    
+    return () => {
+      clearInterval(transactionTimer);
+    };
+  }, [telegramConnected]);
   
   return (
     <div className="App">
@@ -208,6 +254,25 @@ function App() {
                 <p>Use <code>/check</code> in Telegram to check prices anytime.</p>
               </div>
               
+              <div className="alerts-config">
+                <h3>Alert Settings</h3>
+                <div className="checkbox-group">
+                  <input 
+                    type="checkbox" 
+                    id="transactionAlerts"
+                    checked={transactionAlertsEnabled}
+                    onChange={toggleTransactionAlerts}
+                    disabled={!telegramConnected || monitorActive}
+                  />
+                  <label htmlFor="transactionAlerts">
+                    Enable transaction alerts
+                    <span className="help-text">
+                      Receive notifications when significant buy/sell transactions occur
+                    </span>
+                  </label>
+                </div>
+              </div>
+              
               <div className="input-group">
                 <label htmlFor="interval">Check interval (minutes):</label>
                 <input
@@ -220,20 +285,30 @@ function App() {
                 />
               </div>
               
-              <button 
-                className={monitorActive ? "stop" : "start"} 
-                onClick={toggleMonitoring}
-              >
-                {monitorActive ? "Stop Monitoring" : "Start Monitoring"}
-              </button>
-              
-              <button 
-                className="check-now" 
-                onClick={fetchPrices} 
-                disabled={loading}
-              >
-                Check Prices Now
-              </button>
+              <div className="button-group">
+                <button 
+                  className={monitorActive ? "stop" : "start"} 
+                  onClick={toggleMonitoring}
+                >
+                  {monitorActive ? "Stop Monitoring" : "Start Monitoring"}
+                </button>
+                
+                <button 
+                  className="check-now" 
+                  onClick={fetchPrices} 
+                  disabled={loading}
+                >
+                  Check Prices Now
+                </button>
+                
+                <button
+                  className="refresh-transactions"
+                  onClick={fetchRecentTransactions}
+                  disabled={loadingTransactions}
+                >
+                  Refresh Transactions
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -241,39 +316,90 @@ function App() {
         {loading && <p className="status loading">Loading price data...</p>}
         {error && <p className="status error">{error}</p>}
         
-        <div className="price-display">
-          <h2>Current Prices</h2>
+        <div className="dashboard">
+          <div className="price-display">
+            <h2>Current Prices</h2>
+            
+            {pufferPrice && (
+              <div className="price-item">
+                <h3>Puffer Price:</h3>
+                <p className="price">${pufferPrice.toFixed(6)}</p>
+              </div>
+            )}
+            
+            {pufferPrice && (
+              <div className="price-item threshold">
+                <h3>Threshold Price (55% of Puffer):</h3>
+                <p className="price">${(pufferPrice * 0.55).toFixed(6)}</p>
+              </div>
+            )}
+            
+            {carrotPrice && (
+              <div className="price-item">
+                <h3>Carrot Price:</h3>
+                <p className="price">${carrotPrice.toFixed(6)}</p>
+              </div>
+            )}
+            
+            {discount && (
+              <div className="discount-alert">
+                <h3>Alert! Carrot is below threshold</h3>
+                <p>Discount: {discount}% below threshold</p>
+              </div>
+            )}
+            
+            {lastChecked && (
+              <p className="last-checked">Last checked: {lastChecked}</p>
+            )}
+          </div>
           
-          {pufferPrice && (
-            <div className="price-item">
-              <h3>Puffer Price:</h3>
-              <p className="price">${pufferPrice.toFixed(6)}</p>
+          {telegramConnected && (
+            <div className="transactions-display">
+              <h2>Recent Transactions</h2>
+              
+              {loadingTransactions ? (
+                <p>Loading transaction data...</p>
+              ) : recentTransactions.length > 0 ? (
+                <div className="transaction-list">
+                  {recentTransactions.slice(0, 5).map((tx, index) => {
+                    const typeClass = 
+                      tx.type === 'Buy' ? 'buy' : 
+                      tx.type === 'Sell' ? 'sell' : 
+                      tx.type === 'Mint' ? 'mint' : 
+                      tx.type === 'Burn' ? 'burn' : 'transfer';
+                    
+                    return (
+                      <div key={tx.hash} className={`transaction-item ${typeClass}`}>
+                        <div className="transaction-type">{tx.type}</div>
+                        <div className="transaction-amount">
+                          {tx.amount.toFixed(2)} CARROT
+                          {tx.usdValue && <span className="usd-value">(${tx.usdValue.toFixed(2)})</span>}
+                        </div>
+                        <div className="transaction-time">
+                          {new Date(tx.timestamp).toLocaleTimeString()}
+                        </div>
+                        <a 
+                          href={`https://etherscan.io/tx/${tx.hash}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="transaction-link"
+                        >
+                          View
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p>No transactions detected yet. They will appear here as they occur.</p>
+              )}
+              
+              <p className="transaction-help">
+                Use the <code>/transactions</code> command in Telegram to toggle transaction alerts.
+                <br/>
+                Use <code>/recent</code> to see the latest transactions in Telegram.
+              </p>
             </div>
-          )}
-          
-          {pufferPrice && (
-            <div className="price-item threshold">
-              <h3>Threshold Price (55% of Puffer):</h3>
-              <p className="price">${(pufferPrice * 0.55).toFixed(6)}</p>
-            </div>
-          )}
-          
-          {carrotPrice && (
-            <div className="price-item">
-              <h3>Carrot Price:</h3>
-              <p className="price">${carrotPrice.toFixed(6)}</p>
-            </div>
-          )}
-          
-          {discount && (
-            <div className="discount-alert">
-              <h3>Alert! Carrot is below threshold</h3>
-              <p>Discount: {discount}% below threshold</p>
-            </div>
-          )}
-          
-          {lastChecked && (
-            <p className="last-checked">Last checked: {lastChecked}</p>
           )}
         </div>
       </main>
